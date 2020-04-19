@@ -1,0 +1,31 @@
+// Calculating of distance function.
+
+// Brute force all the wayyyyyyyy.
+
+func real DD(real x1, real y1, real x2, real y2)
+{
+    return sqrt((x2-x1)^2 + (y2-y1)^2);
+}
+
+func real minD(real xo, real yo, real[int,int] xy, int be1, int be2)
+{
+    real dd = 1e3;
+    for(int i = be1; i< be2; i++)
+    {
+        if (dd > DD(xo,yo,xy(0,i),xy(1,i)))
+        {
+            dd = DD(xo,yo,xy(0,i),xy(1,i));
+        }
+    }
+    return dd;
+}
+
+func real[int] funcD(real[int] cx, real[int] cy, real[int,int] xy, int nx, int be1, int be2)
+{
+    real[int] out(nx);
+    for(int i = 0; i< nx; i++)
+    {
+        out[i] = minD(cx[i],cy[i], xy, be1, be2);
+    }
+    return out;
+}

@@ -1,0 +1,61 @@
+macro tr(u) (u') //EOM
+macro div(u1,u2) (dx(u1) + dy(u2)) //EOM
+macro grad(f) [dx(f), dy(f)] //EOM
+macro UgradV(u1,u2,v1,v2) [tr([u1,u2]) * grad(v1), tr([u1,u2]) * grad(v2)] //EOM
+macro eps(u1,u2) [dx(u1), (dy(u1) + dx(u2))/2, (dy(u1) + dx(u2))/2, dy(u2)] //EOM
+macro gradT(f) (grad(f) - grad(f)'*[N.x, N.y]*[N.x, N.y]) // EOM
+macro dotN(v1,v2) (v1 * N.x + v2 * N.y) //EOM
+// macro in() (tr([1.,1.]))//EOM
+
+// Energy dissipation functional.
+macro E() (int2d(Thf)(2 * mu * tr(eps(v1,v2)) * eps(v1,v2))) //EOM
+macro dE() (- 2 * mu * tr(eps(v1,v2)) * eps(v1,v2) + 2 * mu * tr(eps(v1,v2)) * eps(w1,w2)) //EOM
+// macro dE() (- 2 * mu * tr(eps(v1,v2)) * eps(v1,v2) + 2 * mu * tr(eps(v1,v2)) * eps(phi1,phi2) - tr(UgradV(v1,v2,v1,v2)) * [phi1,phi2]) //EOM
+
+// Objective functional.
+macro J() (E) //EOM
+macro dJ() (dE) //EOM
+
+// Constraint.
+macro Vol(Thf) (int2d(Thf)(1.)) //EOM
+macro dVol() (1.) //EOM
+macro Constr(Thf) (Vol(Thf)) //EOM
+macro dCon() (dVol) //EOM
+
+// Lagrange function.
+macro augLagrange() (J/J0 + l * (Constr(Thf) - constrtarget)/Con0 + b/2. * ((Constr(Thf) - constrtarget) ^ 2)/(Con0 ^ 2)) //EOM             /* Augmented Lagrange function */
+// macro augLagrange() (J + l * (Constr(Thf) - constrtarget) + b/2. * ((Constr(Thf) - constrtarget) ^ 2)) //EOM 
+macro dAugLagrange() (dJ/J0 + l * dCon/Con0 + b * dCon * (Constr(Thf) - constrtarget)/(Con0 ^ 2)) //EOM                                    /* Derivative of the augmented Lagrange function*/
+
+// macro augLagrange() (J + l * (Constr(Thf) - constrtarget) + (b/2.) * ((Constr(Thf) - constrtarget) ^ 2)) //EOM             /* Augmented Lagrange function */
+// macro dAugLagrange() (dJ + l * dCon + b * dCon * (Constr(Thf) - constrtarget)) //EOM   
+
+macro comLagrange() (J/J0 + l * (Constr(Thf) - constrtarget)/Con0) //EOM                          /* Common Lagrange function */
+macro dComLagrange() (dJ/J0 + l * dCon/Con0) //EOM                                               /* Derivative of common Lagrange */
+
+macro L() (augLagrange) //EOM
+macro dL() (dAugLagrange) //EOM
+
+
+// macro gradDF() (dJ/J0 + l * dCon /Con0 + b * dCon * (Constr(Thf) - constrtarget)/(Con0^2)) //EOM
+
+func real poiseuillex(real xa,real ya,real xb,real yb,real xx,real yy) {
+  real alpha = 1;
+  real ymin = min(ya, yb);
+  real ymax = max(ya, yb);
+  real xmin = min(xa, xb);
+  real xmax = max(xa, xb);
+  real s = (xa-xx)/(xa-xb);
+  //  cout << xmin << endl;
+  return (yy>ymin)*(yy<ymax)*(xx>xmin)*(xx<xmax)*alpha*s*(1-s)*(-(yb-ya));
+}
+
+func real poiseuilley(real xa,real ya,real xb,real yb,real xx,real yy) {
+  real alpha = 1;
+  real ymin = min(ya, yb);
+  real ymax = max(ya, yb);
+  real xmin = min(xa, xb);
+  real xmax = max(xa, xb);
+  real s = (ya-yy)/(ya-yb);
+  return (yy>ymin)*(yy<ymax)*(xx>xmin)*(xx<xmax)*alpha*s*(1-s)*((xb-xa));
+}
